@@ -1,0 +1,8 @@
+{
+  "name": "fuztask-root",
+  "workspaces": [
+    "api",
+    "front",
+    "shared"
+  ]
+}
