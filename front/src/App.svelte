@@ -17,6 +17,7 @@
     try{
       const res = await fetch("http://localhost:3000/tasks");
       tasks = await res.json();
+      console.log(tasks);
     }catch(err: unknown){
       if (err instanceof Error) {
         error = err.message;
@@ -105,26 +106,29 @@
       console.error(err);
     }
   }
+
+  // ===================================
+  // requete delete ====================
+  // ===================================
+  async function deleteTask(task: Task){
+    try{
+      const res = await fetch(`http://localhost:3000/tasks/${task.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      });
+
+      if(!res.ok) throw new Error("Failed to delete stask");
+
+      await loadTasks();
+    }catch(err){
+      console.error(err);
+    }
+  }
 </script>
 
 <main>
-
-    
-  {#if loading}
-    <p>Chargement ...</p>
-  {:else if error}
-    <p>{error}</p>
-  {:else}
-    <ul>
-      {#each tasks as task}
-        <li 
-          onclick={() => updateTask(task)}
-          style="cursor: pointer"
-        >
-        {task.title} - {task.isDone}</li>
-      {/each}
-    </ul>
-  {/if}
 
   <form action="" onsubmit={handleSubmit}>
     <label for="">Titre</label>
@@ -132,9 +136,32 @@
 
     <button type="submit">{ isSubmitting ? 'Envoie ...' : 'créer'}</button>
   </form>
+    
+
+
+  {#if loading}
+    <p>Chargement ...</p>
+  {:else if error}
+    <p>{error}</p>
+  {:else}
+    <ul>
+      {#each tasks as task}
+        <li>
+        <p 
+          onclick={() => updateTask(task)}
+          style="cursor: pointer">
+          {task.title} - {task.isDone}
+        </p>
+        <p style='cursor: pointer' onclick={() => deleteTask(task)}>X</p>
+         - </li>
+      {/each}
+    </ul>
+  {/if}
+
+  
 
 </main>
 
-<style>z
+<style>
 
 </style>

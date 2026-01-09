@@ -1,5 +1,9 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import { tasksTable } from './core/drizzle/schema'
+import { db } from './core/drizzle'
+import { Context } from 'hono/jsx'
+import { eq } from 'drizzle-orm'
 
 const app = new Hono()
 
@@ -28,26 +32,10 @@ app.get("/json", (c) => {
 })
 
 
-type Task = {
-  id: number; 
-  title: string;
-  isDone: boolean;
-}
-
-const tasks :Task[] = [
-  {
-    id: 1,
-    title: 'Ma première task',
-    isDone: false,
-  },
-  {
-    id: 2,
-    title: 'Ma deuxième task',
-    isDone: true,
-  },
-]
-
-app.get('/tasks', (c) => {
+// TODO: créer le bon typage avec l'inférence de Drizzle
+app.get('/tasks', async (c) => {
+  const tasks = await db.select().from(tasksTable);
+  console.log(tasks);
   return c.json(tasks);
 })
 
@@ -55,30 +43,49 @@ app.post("/tasks", async (c) => {
   // récupération d body de la requête
   const { title } = await c.req.json();
 
-  const lastTask = tasks[tasks.length - 1];
-  
-  // Si le tableau est vide, l'ID est 1. Sinon, c'est l'ancien ID + 1
-  const newId = lastTask ? lastTask.id + 1 : 1;
+  if(!title || title.length <= 2 ){
+    const strError = "Title is not valid";
+    console.error(strError);
+    return c.json({ message: strError}, 401);
+  }
 
-  const newTask: Task = {
-    id: newId,
-    title: title,
-    isDone: false,
-  };
+  const payload = {
+    title
+  }
 
-  tasks.push(newTask);
+  const newTask = await db.insert(tasksTable).values(payload).returning();
+
+  if(!newTask){
+    const strError = "insert failed";
+    console.log(strError);
+    return c.json({ message: strError}, 401);
+  }
 
   return c.json(newTask, 201);
+
+});
+
+app.delete("/tasks/:taskId", async (c) => {
+  const taskId = c.req.param('taskId');
+  // TODO: ajouter un check si la task existe
+  // TODO: ajouter une verif si j'ai bien l'id dans le param
+  await db.delete(tasksTable).where(eq(tasksTable.id, taskId));
+  return c.json({status: 'ok'}, 200);
 })
 
 app.patch("/tasks/:taskId", async (c) => {
   const taskId = c.req.param('taskId');
   const { isDone } = await c.req.json();
-  tasks.forEach((task) => {
-    if(task.id === Number(taskId)){
-      task.isDone = isDone;
-    }
-  })
+
+  const isValid = await db.select().from(tasksTable).where(eq(tasksTable.id, taskId));
+  if(!isValid){
+    return c.json({ message: "task not found"}, 401);
+  }
+
+  const isUpdated = await db.update(tasksTable).set({ isDone: isDone}).where(eq(tasksTable.id, taskId));
+  if(!isUpdated){
+    return c.json({ message: "failed to update task"}, 401);
+  }
 
   const response = { status: 'ok'}
 
