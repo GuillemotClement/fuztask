@@ -4,6 +4,7 @@ import { projectsTable, tasksTable } from './db/schema'
 import { db } from './libs/drizzle'
 import { eq, InferSelectModel, InferInsertModel } from 'drizzle-orm'
 import { z } from "zod";
+import { swaggerUI } from '@hono/swagger-ui'
 
 const app = new Hono()
 
@@ -19,6 +20,40 @@ app.use(
     credentials: true,
   })
 )
+
+
+// =============================================
+// SWAGGER =====================================
+// =============================================
+const openApiDoc = {
+  openapi: "3.0.0",
+  info: {
+    title: "Fuztask API Documentation",
+    version: '0.0.1',
+    description: 'API documentation for your service',
+  }, 
+  paths: {
+    '/projects' : {
+      get: {
+        summary: "get all projects",
+        responses: {
+          "200" : {
+            description: "Get all projects"
+          },
+        },
+      },
+    },
+  // add more endpoint 
+  },
+}
+
+app.get('/doc', (c) => c.json(openApiDoc));
+app.get('/ui', swaggerUI({ url: '/doc'}))
+
+// =============================================
+// ====================================
+// =============================================
+
 
 // TODO: créer le bon typage avec l'inférence de Drizzle
 app.get('/tasks', async (c) => {

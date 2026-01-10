@@ -8,6 +8,7 @@
   "dependencies": {
     "@faker-js/faker": "^10.2.0",
     "@fuztask/shared": "workspace:*",
+    "@hono/swagger-ui": "^0.5.3",
     "drizzle-orm": "^0.45.1",
     "hono": "^4.11.3",
     "pg": "^8.16.3",
