@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import { tasksTable } from './core/drizzle/schema'
-import { db } from './core/drizzle'
+import { tasksTable } from './db/schema'
+import { db } from './libs/drizzle'
 import { Context } from 'hono/jsx'
 import { eq } from 'drizzle-orm'
 
@@ -91,5 +91,8 @@ app.patch("/tasks/:taskId", async (c) => {
 
   return c.json(response);
 })
+
+// ============================================
+// PROJECTS ==================================
 
 export default app

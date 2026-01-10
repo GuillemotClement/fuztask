@@ -1,4 +1,4 @@
-import { db } from "./index";
+import { db } from "../libs/drizzle/index";
 import { tasksTable } from "./schema";
 
 async function main(){
