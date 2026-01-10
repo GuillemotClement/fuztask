@@ -1,9 +1,9 @@
-import { Hono } from 'hono'
+import { Hono, Context } from 'hono'
 import { cors } from 'hono/cors'
-import { tasksTable } from './db/schema'
+import { projectsTable, tasksTable } from './db/schema'
 import { db } from './libs/drizzle'
-import { Context } from 'hono/jsx'
-import { eq } from 'drizzle-orm'
+import { eq, InferSelectModel, InferInsertModel } from 'drizzle-orm'
+import { z } from "zod";
 
 const app = new Hono()
 
@@ -19,18 +19,6 @@ app.use(
     credentials: true,
   })
 )
-
-app.get('/', (c) => {
-  return c.text('Hello!')
-})
-
-app.get("/json", (c) => {
-  return c.json({
-    ok: true,
-    message: "This is json return by hono",
-  })
-})
-
 
 // TODO: créer le bon typage avec l'inférence de Drizzle
 app.get('/tasks', async (c) => {
@@ -92,7 +80,172 @@ app.patch("/tasks/:taskId", async (c) => {
   return c.json(response);
 })
 
-// ============================================
-// PROJECTS ==================================
+// =============================================
+// TYPES =======================================
+// =============================================
+type Project = InferSelectModel<typeof projectsTable>;
+type NewProject = InferInsertModel<typeof projectsTable>;
+
+
+// =============================================
+// VALIDATORS ==================================
+// =============================================
+
+// =============================================
+// PROJECTS VALIDATORS =========================
+// =============================================
+const projectValidators = {
+  createProjectSchema : z.object({
+    title: z.string().min(2).max(100).trim().toLowerCase()
+  }),
+
+  updateProjectSchema: z.object({
+    title: z.string().min(2).max(100).trim().toLowerCase()
+  })
+}
+
+
+export type CreateProjectDTO = z.infer<typeof projectValidators.createProjectSchema>;
+
+// =============================================
+// HELPER ====================================
+// =============================================
+const projectHelper = {
+  async getById(projectId: string): Promise<Project>{
+      const project = await db.select().from(projectsTable).where(eq(projectsTable.id, projectId));
+      return project[0] || [];
+  }
+}
+
+// =============================================
+// CONTROLLER ==================================
+// =============================================
+
+
+// =============================================
+// PROJECTS ====================================
+// =============================================
+const projectsControllers ={
+  async getAll(c: Context){
+    const projects = await db.select().from(projectsTable);
+    const response = projects;
+    return c.json(response, 200);
+  },
+
+  async getById(c: Context){
+    const projectId = c.req.param('projectId');
+    if(!projectId){
+      return c.json({message: "project id not found"}, 400);
+    }
+
+    try{
+      const project = await db.select().from(projectsTable).where(eq(projectsTable.id, projectId));
+
+      // check si la ressource est trouvé
+      if(!project){
+        return c.json({ message: "project not found"}, 404);
+      }
+
+      return c.json(project, 200);
+    }catch(error){
+      console.error("error fetch project: ", error);
+      return c.json({ message: "internal server error"}, 500);
+    }
+  },
+
+  async create(c: Context){
+    const payload = await c.req.json();
+
+    // on check avec le typage généré par Zod.
+    const validationDate = projectValidators.createProjectSchema.safeParse(payload);
+    if(!validationDate.success){
+      const errorTree = z.treeifyError(validationDate.error);
+
+      return c.json({ error: "data invalid", details: errorTree}, 400)
+    }
+
+    const projectData = validationDate.data;
+
+    try{
+      const newProject = await db.insert(projectsTable).values(projectData).returning();
+      if(!newProject){
+        return c.json({ message: "failed to creat new project"})
+      }
+
+      return c.json(newProject, 201);
+
+    }catch(error){
+      console.error("error to insert new project", error);
+      return c.json({ message: "internal server error"}, 500);
+    }
+  },
+
+  async delete(c: Context){
+    const projectId = c.req.param('projectId');
+
+    try{
+      const project = await projectHelper.getById(projectId);
+
+      if(!project){
+        return c.json({ message: "project not found"},404)
+      }
+
+      await db.delete(projectsTable).where(eq(projectsTable.id, projectId));
+    }catch(error){
+      console.error("failed to delete project");
+      return c.json({ message: "failed to delete project"}, 500);
+    }
+  },
+
+  async update(c: Context){
+    const projectId = c.req.param('projectId');
+    if(!projectId){
+      return c.json({message: "project id not found"}, 400);
+    }
+
+    const payload = await c.req.json();
+    const validationData = projectValidators.updateProjectSchema.safeParse(payload);
+    if(!validationData.success){
+      const errorTree = z.treeifyError(validationData.error);
+      return c.json({ error: "data invalid", details: errorTree}, 400)
+    }
+
+    const payloadData = validationData.data
+
+    try{
+      const newProject = await db.update(projectsTable).set({ title: payloadData.title}).where(eq(projectsTable.id, projectId)).returning();
+      if(!newProject){
+        console.error("failed to update project");
+        return c.json({ message: "faile to update project"}, 500)
+      }
+
+      return c.json({ status: "created"}, 201)
+    }catch(error){
+      console.error("failed to update project");
+      return c.json({ message: "failed to update project"}, 500);
+    }
+  }
+}
+
+// =============================================
+// ROUTAGE =====================================
+// =============================================
+// SYNTAXE DANS UN FICHEIR EXTERNE => PLUS TARD POUR LA REFACTO EN CLEAN ARCHI
+// controllers/projectsController.ts
+// export const getAll = async (c: Context) => {
+//   const projects = await db.select().from(projectsTable);
+//   return c.json(projects, 200);
+// };
+
+// // index.ts
+// import { getAll } from './controllers/projectsController';
+// app.get("/projects", getAll);
+
+
+app.get("/projects",(c) => projectsControllers.getAll(c));
+app.get('/projects/:projectId', (c) => projectsControllers.getById(c));
+app.post('/projects', (c) => projectsControllers.create(c));
+app.put('/projects/:projectId', (c) => projectsControllers.update(c));
+app.delete('/projects/:projectId', (c) => projectsControllers.delete(c));
 
 export default app
