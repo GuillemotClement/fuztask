@@ -56,11 +56,7 @@ app.get('/ui', swaggerUI({ url: '/doc'}))
 
 
 // TODO: créer le bon typage avec l'inférence de Drizzle
-app.get('/tasks', async (c) => {
-  const tasks = await db.select().from(tasksTable);
-  console.log(tasks);
-  return c.json(tasks);
-})
+
 
 app.post("/tasks", async (c) => {
   // récupération d body de la requête
@@ -120,6 +116,8 @@ app.patch("/tasks/:taskId", async (c) => {
 // =============================================
 type Project = InferSelectModel<typeof projectsTable>;
 type NewProject = InferInsertModel<typeof projectsTable>;
+
+
 
 
 // =============================================
@@ -261,6 +259,27 @@ const projectsControllers ={
     }
   }
 }
+
+// =============================================
+// TASKS    ====================================
+// =============================================
+
+
+
+app.get('/tasks', async (c) => {
+  const tasks = await db
+    .select({
+      taskId: tasksTable.id,
+      title: tasksTable.title,
+      isDone: tasksTable.isDone,
+      projectId: tasksTable.projectId,
+      projectName: projectsTable.title,
+    })
+    .from(tasksTable)
+    .leftJoin(projectsTable, eq(tasksTable.projectId, projectsTable.id));
+
+  return c.json(tasks);
+})
 
 // =============================================
 // ROUTAGE =====================================

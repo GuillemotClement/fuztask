@@ -5,7 +5,7 @@ export const tasksTable = pgTable("tasks", {
   id: uuid().primaryKey().defaultRandom(),
   title: varchar().notNull(),
   isDone: boolean("is_done").default(true),
-  projectId: text("project_id").notNull(),
+  projectId: uuid("project_id").notNull(),
 })
 
 export const projectsTable = pgTable("projects", {

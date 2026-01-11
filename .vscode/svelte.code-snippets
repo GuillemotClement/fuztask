@@ -1,0 +1,18 @@
+{
+  "New Svelte Component": {
+    "prefix": "nsv",
+    "body": [
+      "<script lang=\"ts\">",
+
+      "</script>",
+      "",
+      "<div>",
+      "\t<h1>${TM_FILENAME_BASE}</h1>",
+      "</div>",
+      "",
+      "<style>",
+      "</style>"
+    ],
+    "description": "Generate a new Svelte component boilerplate"
+  }
+}

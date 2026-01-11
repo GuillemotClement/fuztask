@@ -19,6 +19,8 @@
     "vite": "^7.2.4"
   },
   "dependencies": {
-    "@fuztask/shared": "workspace:*"
+    "@fuztask/shared": "workspace:*",
+    "@lucide/svelte": "^0.562.0",
+    "@mateothegreat/svelte5-router": "^2.16.19"
   }
 }

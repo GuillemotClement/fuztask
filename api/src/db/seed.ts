@@ -40,10 +40,19 @@ async function seedTasks(){
       title: "Mettre en place un design potable",
       projectId: fuztaskId
     },
+    { 
+      title: "Ajouter l'authentification",
+      projectId: fuztaskId
+    },
+    { 
+      title: "Ajouter un context pour les projet (perso, evode)",
+      projectId: fuztaskId,
+    },
     {
       title: "Mettre en place la gestion des membres d'un club",
       projectId: ubklubId
-    }
+    },
+
   ]
 
   await db.insert(tasksTable).values(data).onConflictDoNothing();

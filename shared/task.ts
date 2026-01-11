@@ -3,3 +3,11 @@ export type Task = {
   title: string;
   isDone: boolean;
 }
+
+export type TaskWithProject = {
+  taskId: string;
+  title: string;
+  isDone: boolean;
+  projectId: string;
+  projectName: string;
+}
