@@ -120,10 +120,12 @@ main {
   /* COLOR */
   --primary: #d1d1e9; /* temp */
   --black: #1A1A1A;
-  --white: ;
+  --success: green;
+  --warning: orange;
+  --danger: red;
+  --white: white;
   /* border */
   --border-container: 1px solid #d1d1e9;
-
   /* DEBUG */
   --border-debug: 1px solid red;
 }
@@ -139,7 +141,6 @@ body{
 .container {
   width: 120rem;
   margin: 0 auto;
-  padding: 2rem 0;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -161,6 +162,11 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+.title__page {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
 
 /* =============================================
    DEBUG ====================================
@@ -175,3 +181,15 @@ h1, h2, h3, h4, h5, h6 {
    .text-center {
     text-align: center;
    }
+
+
+   /* =============================================
+      ASIDE ====================================
+      ============================================= */
+.aside__container {
+  border: var(--border-debug);
+  width: 25%;
+  h2 {
+    text-align: center;
+  }
+}

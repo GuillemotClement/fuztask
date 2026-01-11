@@ -15,6 +15,20 @@
     </li>
   </ul>
 
+  <ul class="header__action">
+    <li>
+      <a href="/login">Connexion</a>
+    </li>
+    <li>
+      <a href="/register">Inscription</a>
+    </li>
+    <li>
+      <a href="/logout">Déconnexion</a>
+    </li>
+    <li>
+      <a href="/profil">Profil</a>
+    </li>
+  </ul>
 
 </header>
 
@@ -27,7 +41,7 @@ header {
   align-items: center;
 }
 
-.header_navigation {
+.header_navigation, .header__action {
   display: flex;
   column-gap: 0.8rem;
 }

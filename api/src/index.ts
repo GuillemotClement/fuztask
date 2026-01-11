@@ -5,22 +5,19 @@ import { db } from './libs/drizzle'
 import { eq, InferSelectModel, InferInsertModel } from 'drizzle-orm'
 import { z } from "zod";
 import { swaggerUI } from '@hono/swagger-ui'
+import { taskRouter } from './router/taskRouter'
+import { auth } from './libs/better_auth/auth'
 
 const app = new Hono()
 
-app.use('/*', cors())
-app.use(
-  '/api2/*',
-  cors({
-    origin: 'http://localhost:5173',
-    allowHeaders: ['X-Custom-Header', 'Upgrade-Insecure-Requests'],
-    allowMethods: ['POST', 'GET', 'OPTIONS'],
-    exposeHeaders: ['Content-Length', 'X-Kuma-Revision'],
-    maxAge: 600,
-    credentials: true,
-  })
-)
-
+app.use('/*', cors({
+  origin: 'http://localhost:5173',
+  allowHeaders: ['Content-Type', 'Authorization', 'X-Custom-Header', 'Upgrade-Insecure-Requests'],
+  allowMethods: ['POST', 'GET', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  exposeHeaders: ['Content-Length', 'X-Kuma-Revision'],
+  maxAge: 600,
+  credentials: true,
+}))
 
 // =============================================
 // SWAGGER =====================================
@@ -50,9 +47,23 @@ const openApiDoc = {
 app.get('/doc', (c) => c.json(openApiDoc));
 app.get('/ui', swaggerUI({ url: '/doc'}))
 
+
+// =============================================
+// BETTER_AUTH ====================================
+// =============================================
+app.on(
+  ['POST', 'GET'], 
+  "/api/auth/*",
+  (c) => auth.handler(c.req.raw)
+);
 // =============================================
 // ====================================
 // =============================================
+
+// =============================================
+// ROUTEUR PRINCIAPLE ==========================
+// =============================================
+app.route('api/tasks', taskRouter);
 
 
 // TODO: créer le bon typage avec l'inférence de Drizzle
